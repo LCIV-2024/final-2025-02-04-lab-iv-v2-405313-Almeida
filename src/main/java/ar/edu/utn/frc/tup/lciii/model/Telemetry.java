@@ -16,6 +16,8 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -31,7 +33,31 @@ public class Telemetry {
     @Column(name = "ID")
     private Long id;
 
+    @Column(name= "IP")
+    private String ip;
+
     @OneToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "HOSTNAME", referencedColumnName = "HOSTNAME", insertable = false, updatable = false)
     private Device device;
+
+    @Column(name = "HOSTNAME")
+    private String HostName;
+
+    @Column(name = "DATADATE")
+    private LocalDateTime dataDate;
+
+    @Column(name = "HOSTDISKFREE" )
+    private Double hostDiskFree;
+
+    @Column(name = "CPUUSAGE" )
+    private Double cpuUsage;
+
+    @Column(name = "MICROPHONESTATE")
+    private String microphoneState;
+
+    @Column(name = "SCREENCAPTUREALLOWED")
+    private Boolean screenCaptureAllowed;
+
+    @Column(name = "AUDIOCAPTUREALLOWED")
+    private Boolean audioCaptureAllowed;
 }

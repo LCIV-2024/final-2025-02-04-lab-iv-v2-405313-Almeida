@@ -20,11 +20,16 @@ public class DeviceController {
     private  ServiceImpl service;
 
     @GetMapping("/api/device")
-    public ResponseEntity<List<Device>> getDeviceType(@RequestParam DeviceType type){
-        List<Device> lst = service.getDeviceWithType(type);
+    public ResponseEntity<List<DeviceDto>> getDeviceType(@RequestParam(required = false) DeviceType type) {
+        List<DeviceDto> lst = service.getDeviceWithType(type);
         return ResponseEntity.ok(lst);
     }
 
+    @PostMapping("/api/save-consumed-devices")
+    public String saveConsumedDevices() {
+        service.saveConsumedDevices();
+        return "Dispositivos consumidos guardados exitosamente.";
+    }
 
     @PostMapping("api/device")
     public ResponseEntity<Device> postDevice(@RequestBody DeviceDto device){

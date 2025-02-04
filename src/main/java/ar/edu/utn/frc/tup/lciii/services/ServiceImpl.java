@@ -10,10 +10,14 @@ import ar.edu.utn.frc.tup.lciii.repositories.TelemetryRepository;
 import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.RestTemplate;
 
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @AllArgsConstructor
@@ -23,6 +27,8 @@ public class ServiceImpl {
     private  DeviceRepository deviceRepository;
     @Autowired
     private  TelemetryRepository telemetryRepository;
+    @Autowired
+    private final RestTemplate restTemplate;
 
 
     public Device createDevice(DeviceDto request) {
@@ -62,11 +68,17 @@ public class ServiceImpl {
         return  lstTelemetry;
     }
 
-    public List<Device> getDeviceWithType(DeviceType type){
-        List<Device> lstDevice;
-        lstDevice = Collections.singletonList(deviceRepository.findByType(String.valueOf(type)));
+    public List<DeviceDto> getDeviceWithType(DeviceType type) {
+        List<Device> lstDevice = (List<Device>) deviceRepository.findByType(String.valueOf(type));
 
-        return lstDevice;
+        List<DeviceDto> deviceDtos = lstDevice.stream().map(device -> new DeviceDto(
+                device.getHostName(),
+                device.getType(),
+                device.getOs(),
+                device.getMacAddress()
+        )).collect(Collectors.toList());
+
+        return deviceDtos;
     }
 
     public List<Telemetry> getTelemetriesFilter(String filter) {
@@ -74,5 +86,40 @@ public class ServiceImpl {
         lstTelemetry = Collections.singletonList(telemetryRepository.findByDevice_HostName(filter));
 
         return lstTelemetry;
+    }
+    public void saveConsumedDevices() {
+        String url = "https://67a106a15bcfff4fabe171b0.mockapi.io/api/v1/device/device";
+
+        try {
+
+            Device[] devices = restTemplate.getForObject(url, Device[].class);
+
+            if (devices != null && devices.length > 0) {
+                List<Device> deviceList = Arrays.asList(devices);
+                Collections.shuffle(deviceList);
+                int halfSize = deviceList.size() / 2;
+                List<Device> selectedDevices = deviceList.subList(0, halfSize);
+
+                List<Device> deviceEntities = selectedDevices.stream()
+                        .map(device -> {
+
+                            Device entity = new Device();
+                            entity.setHostName(device.getHostName());
+                            entity.setType(device.getType());
+                            entity.setOs(device.getOs());
+                            entity.setMacAddress(device.getMacAddress());
+                            entity.setCreated_date(LocalDateTime.now());
+                            return entity;
+                        })
+                        .collect(Collectors.toList());
+
+
+                deviceRepository.saveAll(deviceEntities);
+
+            }
+        } catch (HttpClientErrorException | NullPointerException e) {
+
+            System.err.println("Error al obtener dispositivos: " + e.getMessage());
+        }
     }
 }

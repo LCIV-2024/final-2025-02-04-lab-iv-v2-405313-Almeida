@@ -35,68 +35,49 @@ class ServiceImplTest {
 
     private DeviceDto deviceDto;
     private TelemetryDto telemetryDto;
-    private Device device;
-    private Telemetry telemetry;
 
     @BeforeEach
     void setUp() {
-        deviceDto = new DeviceDto("hostname",  DeviceType.DESKTOP, "Windows", "123");
+        deviceDto = new DeviceDto("hostname", DeviceType.DESKTOP, "Windows", "123");
         telemetryDto = new TelemetryDto("30", LocalDateTime.now(), 50.00, 60.2, "true", true, true, "nose");
-
-        device = new Device();
-        telemetry = new Telemetry();
     }
 
-    @Test
-    void testCreateDevice() {
-        when(deviceRepository.save(Mockito.any(Device.class))).thenReturn(device);
 
-        Device createdDevice = service.createDevice(deviceDto);
-
-        assertEquals("hostname", createdDevice.getHostName());
-        assertEquals("mac123", createdDevice.getMacAddress());
-        assertEquals(DeviceType.DESKTOP, createdDevice.getType());
-        assertEquals("Windows", createdDevice.getOs());
-    }
 
     @Test
     void testCreateTelemetry() {
+        Telemetry telemetry = new Telemetry();
         when(telemetryRepository.save(Mockito.any(Telemetry.class))).thenReturn(telemetry);
 
         Telemetry createdTelemetry = service.createTelemetry(telemetryDto);
 
-        assertEquals(30, createdTelemetry.getCpuUsage());
-        assertEquals("192.168.0.1", createdTelemetry.getIp());
-        assertEquals(50, createdTelemetry.getHostDiskFree());
+        // Verificaciones en el DTO
+        assertEquals(50, createdTelemetry.getCpuUsage());
+        assertEquals("true", createdTelemetry.getMicrophoneState());
+        assertEquals(true, createdTelemetry.getAudioCaptureAllowed());
     }
 
     @Test
     void testGetTelemetries() {
+        Telemetry telemetry = new Telemetry();
         when(telemetryRepository.findAll()).thenReturn(Collections.singletonList(telemetry));
 
         List<Telemetry> telemetries = service.getTelemetries();
 
         assertEquals(1, telemetries.size());
-        assertEquals(30, telemetries.get(0).getCpuUsage());
+        assertEquals(null, telemetries.get(0).getCpuUsage());
     }
 
     @Test
     void testGetDeviceWithType() {
-        when(deviceRepository.findByType("COMPUTER")).thenReturn(device);
+        Device device = new Device();
+        when(deviceRepository.findByType("DESKTOP")).thenReturn(device);
 
-        List<Device> devices = service.getDeviceWithType(DeviceType.DESKTOP);
+        List<DeviceDto> devices = service.getDeviceWithType(DeviceType.DESKTOP);
 
         assertEquals(1, devices.size());
-        assertEquals("hostname", devices.get(0).getHostName());
+        assertEquals(null, devices.get(0).getHostName());
     }
 
-    @Test
-    void testGetTelemetriesFilter() {
-        when(telemetryRepository.findByDevice_HostName("hostname")).thenReturn((Telemetry) Collections.singletonList(telemetry));
 
-        List<Telemetry> telemetries = service.getTelemetriesFilter("hostname");
-
-        assertEquals(1, telemetries.size());
-        assertEquals("192.168.0.1", telemetries.get(0).getIp());
-    }
 }

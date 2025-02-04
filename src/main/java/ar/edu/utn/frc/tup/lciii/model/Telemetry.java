@@ -60,4 +60,5 @@ public class Telemetry {
 
     @Column(name = "AUDIOCAPTUREALLOWED")
     private Boolean audioCaptureAllowed;
+
 }
